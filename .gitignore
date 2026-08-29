@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Nix
+result
+result-*
+
+# Environment Variables Files (Private)
+.env
