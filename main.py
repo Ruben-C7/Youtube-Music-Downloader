@@ -93,23 +93,21 @@ def main():
     print("🔍 Analyzing YouTube video...")
 
     ydl_opts = {
-        "format": "bestaudio/best",
-        "outtmpl": f"{TEMP_DIR}/%(title)s.%(ext)s",
-        "postprocessors": [
-            {
-                "key": "FFmpegExtractAudio",
-                "preferredcodec": "mp3",
-                "preferredquality": "320",
-            },
-            {"key": "EmbedThumbnail"},
-            {"key": "FFmpegMetadata"},
+        'format': 'bestaudio/best',
+        'outtmpl': f'{TEMP_DIR}/%(title)s.%(ext)s',
+        'writethumbnail': True,
+        'postprocessors': [
+            {'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '320'},
+            {'key': 'FFmpegThumbnailsConvertor', 'format': 'jpg'},  # <-- CONVERTE PARA JPG AQUI
+            {'key': 'EmbedThumbnail'},
+            {'key': 'FFmpegMetadata'}
         ],
-        "writesubtitles": True,
-        "subtitleslangs": ["all", "-live_chat"],
-        "subtitlesformat": "lrc",
-        "parse_metadata": "title:%(artist)s - %(title)s",
-        "quiet": True,
-        "no_warnings": True,
+        'writesubtitles': True, 
+        'subtitleslangs': ['all', '-live_chat'], 
+        'subtitlesformat': 'lrc',
+        'parse_metadata': 'title:%(artist)s - %(title)s', 
+        'quiet': True, 
+        'no_warnings': True
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -187,27 +185,15 @@ def main():
     print("📝 Applying final tags and cover...")
     temp_out = os.path.join(TEMP_DIR, "temp_tagged.mp3")
 
-    subprocess.run(
-        [
-            "ffmpeg",
-            "-y",
-            "-v",
-            "error",
-            "-i",
-            mp3_path,
-            "-metadata",
-            f"title={final_title}",
-            "-metadata",
-            f"artist={final_artist}",
-            "-metadata",
-            f"album={final_album}",
-            "-c",
-            "copy",
-            temp_out,
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
+    subprocess.run([
+        'ffmpeg', '-y', '-v', 'error', '-i', mp3_path,
+        '-map', '0', '-c', 'copy', '-id3v2_version', '3',
+        '-metadata', f'title={final_title}',
+        '-metadata', f'artist={final_artist}',
+        '-metadata', f'album={final_album}',
+        temp_out
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    
     os.replace(temp_out, mp3_path)
 
     safe_artist = sanitize_filename(final_artist)
